@@ -1,0 +1,1073 @@
+<title>Light Seeker Servo</title>
+<meta name="description" content="Beginner build guide: a servo head with two light sensors that turns toward the brightest light, using the Arduino Starter Kit.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #F2F5F4;
+    --surface: #FFFFFF;
+    --sunk: #E7ECEA;
+    --ink: #16211F;
+    --muted: #56655F;
+    --line: #D3DCD9;
+    --copper: #B35A22;
+    --copper-soft: #F6E3D5;
+    --teal: #0D7A80;
+    --teal-soft: #D8EEEE;
+    --warn: #A6451B;
+    --code-bg: #14201E;
+    --code-ink: #DDE8E4;
+    --code-comment: #7FA39A;
+    --code-accent: #F0A46C;
+    --sim-bg: #0F1716;
+    --display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+    --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground: #0E1514;
+      --surface: #16201E;
+      --sunk: #1D2927;
+      --ink: #E3ECE9;
+      --muted: #97A8A3;
+      --line: #2B3A37;
+      --copper: #E48D52;
+      --copper-soft: #3A2618;
+      --teal: #45B8BE;
+      --teal-soft: #15302F;
+      --warn: #F08A5D;
+      --code-bg: #0A100F;
+      --sim-bg: #0A100F;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground: #0E1514;
+    --surface: #16201E;
+    --sunk: #1D2927;
+    --ink: #E3ECE9;
+    --muted: #97A8A3;
+    --line: #2B3A37;
+    --copper: #E48D52;
+    --copper-soft: #3A2618;
+    --teal: #45B8BE;
+    --teal-soft: #15302F;
+    --warn: #F08A5D;
+    --code-bg: #0A100F;
+    --sim-bg: #0A100F;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.65;
+    padding-inline: 20px;
+    padding-block: 0 64px;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; }
+  .prose { max-width: 68ch; }
+
+  h1, h2, h3 { font-family: var(--display); line-height: 1.15; text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(2.3rem, 6vw, 3.6rem); font-weight: 700; letter-spacing: -0.01em; }
+  h2 { font-size: clamp(1.6rem, 3.4vw, 2.1rem); font-weight: 700; }
+  h3 { font-size: 1.2rem; font-weight: 600; }
+  p { margin: 0; }
+  a { color: var(--teal); text-underline-offset: 3px; }
+  a:hover { color: var(--copper); }
+  :focus-visible { outline: 3px solid var(--copper); outline-offset: 2px; border-radius: 3px; }
+  code { font-family: var(--mono); font-size: 0.9em; background: var(--sunk); padding: 0.1em 0.35em; border-radius: 4px; }
+  .label {
+    font-family: var(--mono); font-size: 0.75rem; text-transform: uppercase;
+    letter-spacing: 0.12em; color: var(--copper); font-weight: 500;
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar {
+    display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; justify-content: space-between;
+    padding-block: 18px; border-bottom: 1px solid var(--line);
+    font-family: var(--mono); font-size: 0.8rem; color: var(--muted);
+  }
+  .topbar nav { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+  .topbar nav a { color: var(--muted); text-decoration: none; }
+  .topbar nav a:hover { color: var(--copper); }
+
+  /* ---------- hero ---------- */
+  .hero {
+    display: grid; grid-template-columns: 1fr 1.1fr; gap: 40px; align-items: center;
+    padding-block: 48px 40px;
+  }
+  .hero-text { display: grid; gap: 18px; }
+  .hero-text .lede { font-size: 1.15rem; color: var(--muted); max-width: 46ch; }
+  .facts { display: flex; flex-wrap: wrap; gap: 8px; }
+  .fact {
+    font-family: var(--mono); font-size: 0.8rem; padding: 5px 10px;
+    border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink);
+  }
+  .fact b { color: var(--copper); font-weight: 500; }
+
+  .sim {
+    background: var(--sim-bg); border-radius: 14px; padding: 14px; color: #DDE8E4;
+    display: grid; gap: 12px; box-shadow: 0 20px 40px -24px rgba(10, 30, 28, 0.55);
+  }
+  .sim svg { width: 100%; height: auto; display: block; touch-action: none; cursor: grab; border-radius: 8px; }
+  .sim svg:active { cursor: grabbing; }
+  .sim-readout { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-family: var(--mono); font-size: 0.8rem; }
+  .meter { display: grid; gap: 4px; }
+  .meter-top { display: flex; justify-content: space-between; color: #9FB8B1; }
+  .meter-top b { color: #F4F8F6; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .bar { height: 8px; background: #22302E; border-radius: 4px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 50%; background: linear-gradient(90deg, #C4682B, #F6C07A); border-radius: 4px; }
+  .sim-state { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; }
+  .branches { display: flex; gap: 6px; flex-wrap: wrap; }
+  .branch {
+    font-family: var(--mono); font-size: 0.75rem; padding: 4px 9px; border-radius: 6px;
+    border: 1px solid #2E3E3B; color: #7F9892; transition: background .15s, color .15s;
+  }
+  .branch.on { background: #F0A46C; color: #1A0F07; border-color: #F0A46C; }
+  .sim-btn {
+    font-family: var(--mono); font-size: 0.75rem; background: transparent; color: #DDE8E4;
+    border: 1px solid #3A4E4A; border-radius: 6px; padding: 5px 10px; cursor: pointer;
+  }
+  .sim-btn:hover { border-color: #F0A46C; color: #F0A46C; }
+  .sim-hint { font-size: 0.8rem; color: #8FA7A0; }
+  .serial {
+    font-family: var(--mono); font-size: 0.78rem; background: #050A09; color: #7CE0B5;
+    padding: 8px 10px; border-radius: 6px; font-variant-numeric: tabular-nums; white-space: pre; overflow-x: auto;
+  }
+
+  /* ---------- sections ---------- */
+  section { padding-block: 56px 8px; border-top: 1px solid var(--line); margin-top: 32px; }
+  .sec-head { display: grid; gap: 8px; margin-bottom: 24px; }
+  .sec-head p { color: var(--muted); max-width: 64ch; }
+  .stack { display: grid; gap: 16px; }
+
+  .trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .part-role { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 10px; align-content: start; }
+  .part-role svg { width: 100%; height: 90px; }
+  .part-role p { color: var(--muted); font-size: 0.95rem; }
+
+  .figure { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: grid; gap: 10px; }
+  .figure figcaption { font-size: 0.88rem; color: var(--muted); }
+  .figure .scroll { overflow-x: auto; }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+
+  .callout { border-left: 3px solid var(--teal); background: var(--teal-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; font-size: 0.95rem; }
+  .callout.warn { border-left-color: var(--copper); background: var(--copper-soft); }
+  .callout strong { font-family: var(--display); letter-spacing: 0.02em; }
+
+  /* tables */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 500; background: var(--sunk); }
+  tr:last-child td { border-bottom: 0; }
+  td.qty { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--copper); }
+  .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 6px; border: 1px solid rgba(0,0,0,.25); }
+
+  /* resistors */
+  .resistors { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .resistor { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 6px; }
+  .resistor svg { width: 100%; max-width: 260px; height: 46px; }
+  .resistor .val { font-family: var(--display); font-size: 1.3rem; font-weight: 700; }
+  .resistor p { font-size: 0.88rem; color: var(--muted); }
+
+  /* steps */
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: step; }
+  .steps li {
+    counter-increment: step; display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px;
+  }
+  .steps li.done { background: var(--sunk); }
+  .steps li.done .step-body { color: var(--muted); }
+  .steps input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--copper); margin: 3px 0 0; cursor: pointer; }
+  .step-body { display: grid; gap: 4px; }
+  .step-body b { font-family: var(--display); font-size: 1.05rem; }
+  .step-body b::before { content: counter(step) ". "; color: var(--copper); }
+  .progress { display: flex; align-items: center; gap: 12px; font-family: var(--mono); font-size: 0.8rem; color: var(--muted); }
+  .progress .bar { flex: 1; background: var(--sunk); height: 6px; }
+  .progress .bar i { background: var(--copper); width: 0; transition: width .25s; }
+
+  /* code */
+  .code-block { background: var(--code-bg); border-radius: 12px; overflow: hidden; }
+  .code-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #22302E; font-family: var(--mono); font-size: 0.78rem; color: #93ABA4; }
+  .copy { font-family: var(--mono); font-size: 0.75rem; background: #22302E; color: #DDE8E4; border: 0; border-radius: 6px; padding: 5px 12px; cursor: pointer; }
+  .copy:hover { background: #F0A46C; color: #1A0F07; }
+  pre { margin: 0; overflow-x: auto; padding: 16px; }
+  pre code { background: none; padding: 0; color: var(--code-ink); font-size: 0.85rem; line-height: 1.6; display: block; }
+  .c-com { color: var(--code-comment); font-style: italic; }
+  .c-kw { color: var(--code-accent); }
+  .c-num { color: #8DD3F0; }
+
+  /* troubleshooting */
+  details { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 0 16px; }
+  details + details { margin-top: 10px; }
+  summary { cursor: pointer; padding: 14px 0; font-weight: 600; list-style-position: outside; }
+  details[open] summary { border-bottom: 1px solid var(--line); margin-bottom: 12px; }
+  details > div { padding-bottom: 14px; display: grid; gap: 8px; color: var(--ink); }
+
+  /* links */
+  .links { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .link-card { display: grid; gap: 4px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; text-decoration: none; color: var(--ink); }
+  .link-card:hover { border-color: var(--copper); color: var(--ink); }
+  .link-card .src { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .link-card b { font-family: var(--display); font-weight: 600; font-size: 1.05rem; color: var(--teal); }
+  .link-card span:last-child { font-size: 0.9rem; color: var(--muted); }
+
+  footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 0.85rem; color: var(--muted); }
+
+  /* SVG helpers themed by tokens */
+  .svg-ink { fill: var(--ink); }
+  .svg-muted { fill: var(--muted); }
+  .svg-stroke { stroke: var(--ink); }
+  .svg-line { stroke: var(--line); }
+  .svg-copper { fill: var(--copper); }
+  .svg-teal { fill: var(--teal); }
+  svg text { font-family: var(--mono); }
+
+  @media (max-width: 820px) {
+    .hero, .split { grid-template-columns: 1fr; }
+    .trio { grid-template-columns: 1fr; }
+    .links { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 520px) {
+    body { font-size: 16px; padding-inline: 16px; }
+    .resistors, .sim-readout { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="topbar">
+    <span>ARDUINO STARTER KIT · BEGINNER BUILD</span>
+    <nav aria-label="Sections">
+      <a href="#how">How it works</a>
+      <a href="#parts">Parts</a>
+      <a href="#wiring">Wiring</a>
+      <a href="#code">Code</a>
+      <a href="#head">Build the head</a>
+      <a href="#fix">Troubleshooting</a>
+      <a href="#learn">Links</a>
+    </nav>
+  </header>
+
+  <!-- ============ HERO ============ -->
+  <div class="hero">
+    <div class="hero-text">
+      <span class="label">Project · Light follower</span>
+      <h1>Light Seeker</h1>
+      <p class="lede">A little robot head with two light-sensing “eyes” that turns on its servo “neck” to face the brightest light in the room. Point a phone flashlight at it and watch it follow you.</p>
+      <div class="facts">
+        <span class="fact"><b>Time</b> 1–2 h</span>
+        <span class="fact"><b>Level</b> first project</span>
+        <span class="fact"><b>Soldering</b> none</span>
+        <span class="fact"><b>Parts</b> all in the kit</span>
+      </div>
+      <p class="sim-hint" style="color:var(--muted)">Try it first → drag the flashlight in the simulator. The bars are what the Arduino “sees”, and the orange chip shows which part of the code is running.</p>
+    </div>
+
+    <div class="sim" aria-label="Interactive simulator of the light seeker">
+      <svg id="simSvg" viewBox="0 0 400 250" role="img" aria-label="Top view: a servo head with two light sensors turning toward a flashlight you can drag">
+        <defs>
+          <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#FFE7A8" stop-opacity="0.95"/>
+            <stop offset="35%" stop-color="#F6B55A" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="#F6B55A" stop-opacity="0"/>
+          </radialGradient>
+          <pattern id="simgrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <path d="M20 0H0V20" fill="none" stroke="#1B2826" stroke-width="1"/>
+          </pattern>
+        </defs>
+        <rect width="400" height="250" fill="#0F1716"/>
+        <rect width="400" height="250" fill="url(#simgrid)"/>
+        <!-- servo range arc -->
+        <path d="M80 215 A120 120 0 0 1 320 215" fill="none" stroke="#2A3A37" stroke-dasharray="3 5"/>
+        <text x="72" y="238" fill="#56706A" font-size="10">180°</text>
+        <text x="194" y="84" fill="#56706A" font-size="10">90°</text>
+        <text x="318" y="238" fill="#56706A" font-size="10">0°</text>
+        <!-- light beam line -->
+        <line id="beam" x1="200" y1="215" x2="120" y2="70" stroke="#F6B55A" stroke-opacity="0.25" stroke-width="2" stroke-dasharray="2 4"/>
+        <!-- servo body -->
+        <rect x="178" y="205" width="44" height="30" rx="4" fill="#1F5FA8"/>
+        <text x="200" y="224" fill="#CFE2FA" font-size="8" text-anchor="middle">SERVO</text>
+        <!-- head -->
+        <g id="head" transform="rotate(0 200 215)">
+          <rect x="164" y="170" width="72" height="30" rx="6" fill="#C9B79A"/>
+          <rect x="197" y="140" width="6" height="58" fill="#8E7B5E"/>
+          <circle cx="178" cy="176" r="9" fill="#E7C44A" stroke="#6B551B" stroke-width="2"/>
+          <path d="M173 176q2.5-4 5 0t5 0" fill="none" stroke="#6B551B" stroke-width="1.4"/>
+          <circle cx="222" cy="176" r="9" fill="#E7C44A" stroke="#6B551B" stroke-width="2"/>
+          <path d="M217 176q2.5-4 5 0t5 0" fill="none" stroke="#6B551B" stroke-width="1.4"/>
+          <circle cx="200" cy="215" r="7" fill="#F4F8F6"/>
+          <text x="178" y="198" fill="#3B2E1A" font-size="8" text-anchor="middle">L</text>
+          <text x="222" y="198" fill="#3B2E1A" font-size="8" text-anchor="middle">R</text>
+        </g>
+        <!-- flashlight -->
+        <g id="light" transform="translate(120 70)" style="cursor:grab">
+          <circle r="46" fill="url(#glow)"/>
+          <circle r="11" fill="#FFF3CC" stroke="#F6B55A" stroke-width="3"/>
+          <circle r="22" fill="transparent"/>
+        </g>
+        <text x="10" y="18" fill="#6E8A83" font-size="10">TOP VIEW · drag the light</text>
+      </svg>
+      <div class="sim-readout">
+        <div class="meter">
+          <div class="meter-top"><span>A0 · left eye</span><b id="rL">0</b></div>
+          <div class="bar"><i id="bL"></i></div>
+        </div>
+        <div class="meter">
+          <div class="meter-top"><span>A1 · right eye</span><b id="rR">0</b></div>
+          <div class="bar"><i id="bR"></i></div>
+        </div>
+      </div>
+      <div class="sim-state">
+        <div class="branches">
+          <span class="branch" id="brL">turn left</span>
+          <span class="branch" id="brH">hold still</span>
+          <span class="branch" id="brR">turn right</span>
+        </div>
+        <button class="sim-btn" id="autoBtn" type="button">Auto-move light: on</button>
+      </div>
+      <div class="serial" id="serial">L: 0    R: 0    angle: 90</div>
+    </div>
+  </div>
+
+  <!-- ============ HOW IT WORKS ============ -->
+  <section id="how">
+    <div class="sec-head">
+      <span class="label">01 · The idea</span>
+      <h2>How it works: eyes, brain, neck</h2>
+      <p>The whole project is one loop that repeats about 60 times a second: read both eyes, compare them, nudge the neck toward the brighter side.</p>
+    </div>
+
+    <div class="trio">
+      <div class="part-role">
+        <svg viewBox="0 0 200 90" aria-hidden="true">
+          <line x1="80" y1="60" x2="80" y2="88" class="svg-stroke" stroke-width="2"/>
+          <line x1="120" y1="60" x2="120" y2="88" class="svg-stroke" stroke-width="2"/>
+          <circle cx="100" cy="40" r="26" fill="#E7C44A" stroke="#6B551B" stroke-width="3"/>
+          <path d="M84 40q4-8 8 0t8 0t8 0t8 0" fill="none" stroke="#6B551B" stroke-width="2.5"/>
+        </svg>
+        <h3>Eyes · photoresistors</h3>
+        <p>A photoresistor (LDR) changes its resistance with light: bright light → low resistance, darkness → high resistance. We use two, one pointing a bit left and one a bit right.</p>
+      </div>
+      <div class="part-role">
+        <svg viewBox="0 0 200 90" aria-hidden="true">
+          <rect x="40" y="12" width="120" height="70" rx="6" fill="#0E7C86"/>
+          <rect x="52" y="6" width="96" height="10" fill="#1B1B1B"/>
+          <rect x="84" y="36" width="34" height="24" rx="2" fill="#1B1B1B"/>
+          <text x="100" y="75" fill="#E6F4F4" font-size="10" text-anchor="middle">UNO</text>
+        </svg>
+        <h3>Brain · Arduino UNO</h3>
+        <p><code>analogRead()</code> turns each eye’s voltage into a number from <b>0</b> (dark) to <b>1023</b> (bright). The code subtracts left − right to decide which way to turn.</p>
+      </div>
+      <div class="part-role">
+        <svg viewBox="0 0 200 90" aria-hidden="true">
+          <rect x="60" y="30" width="80" height="50" rx="5" fill="#1F5FA8"/>
+          <circle cx="82" cy="30" r="12" fill="#E9EEF2"/>
+          <rect x="72" y="24" width="70" height="12" rx="6" fill="#F4F6F8" stroke="#9AA7B2"/>
+          <path d="M140 60h30" stroke="#8A5A2B" stroke-width="3"/>
+          <path d="M140 66h30" stroke="#C8261E" stroke-width="3"/>
+          <path d="M140 72h30" stroke="#E8801E" stroke-width="3"/>
+        </svg>
+        <h3>Neck · servo motor</h3>
+        <p>A hobby servo turns to an exact angle from <b>0°</b> to <b>180°</b> when you call <code>servo.write(angle)</code>. The two eyes sit on top of it, so they turn with it.</p>
+      </div>
+    </div>
+
+    <div class="split" style="margin-top:24px">
+      <figure class="figure" style="margin:0">
+        <svg viewBox="0 0 320 260" role="img" aria-label="Voltage divider schematic: 5V, photoresistor, junction to A0, 10 kilo-ohm resistor, ground">
+          <text x="60" y="22" class="svg-ink" font-size="13">5V</text>
+          <line x1="70" y1="30" x2="70" y2="60" class="svg-stroke" stroke-width="2"/>
+          <!-- LDR symbol -->
+          <rect x="58" y="60" width="24" height="54" rx="3" fill="none" class="svg-stroke" stroke-width="2"/>
+          <path d="M70 66 l-6 6 l12 6 l-12 6 l12 6 l-12 6 l12 6 l-6 6" fill="none" stroke="#B8962A" stroke-width="2"/>
+          <path d="M112 62 l-22 16 m4 -8 l-4 8 l9 -1" fill="none" stroke="#E0A020" stroke-width="2"/>
+          <path d="M122 80 l-22 16 m4 -8 l-4 8 l9 -1" fill="none" stroke="#E0A020" stroke-width="2"/>
+          <text x="96" y="130" class="svg-muted" font-size="11">photoresistor</text>
+          <line x1="70" y1="114" x2="70" y2="150" class="svg-stroke" stroke-width="2"/>
+          <circle cx="70" cy="140" r="4" class="svg-copper"/>
+          <line x1="70" y1="140" x2="220" y2="140" class="svg-stroke" stroke-width="2" stroke-dasharray="4 3"/>
+          <text x="226" y="144" class="svg-copper" font-size="13" font-weight="500">→ A0</text>
+          <!-- resistor -->
+          <path d="M70 150 l0 6 l-10 5 l20 8 l-20 8 l20 8 l-20 8 l10 5 l0 6" fill="none" class="svg-stroke" stroke-width="2"/>
+          <text x="92" y="182" class="svg-muted" font-size="11">10 kΩ</text>
+          <line x1="70" y1="204" x2="70" y2="228" class="svg-stroke" stroke-width="2"/>
+          <line x1="52" y1="228" x2="88" y2="228" class="svg-stroke" stroke-width="2"/>
+          <line x1="58" y1="235" x2="82" y2="235" class="svg-stroke" stroke-width="2"/>
+          <line x1="64" y1="242" x2="76" y2="242" class="svg-stroke" stroke-width="2"/>
+          <text x="92" y="240" class="svg-ink" font-size="13">GND</text>
+          <text x="150" y="176" class="svg-muted" font-size="11">bright → ~4 V → ~800</text>
+          <text x="150" y="194" class="svg-muted" font-size="11">dark   → ~0.5 V → ~100</text>
+        </svg>
+        <figcaption><b>The voltage divider.</b> The Arduino can’t measure resistance, only voltage. Putting the photoresistor in series with a fixed 10 kΩ resistor turns “more light” into “more volts” at the middle point, which goes to pin A0. Each eye gets its own divider (the right eye goes to A1).</figcaption>
+      </figure>
+
+      <figure class="figure" style="margin:0">
+        <svg viewBox="0 0 320 260" role="img" aria-label="Flowchart of the loop: read eyes, compute difference, turn left, turn right or hold, write servo, repeat">
+          <g font-size="12">
+            <rect x="90" y="8" width="140" height="32" rx="6" fill="none" class="svg-stroke" stroke-width="1.5"/>
+            <text x="160" y="29" class="svg-ink" text-anchor="middle">read A0 and A1</text>
+            <line x1="160" y1="40" x2="160" y2="58" class="svg-stroke" stroke-width="1.5"/>
+            <rect x="90" y="58" width="140" height="32" rx="6" fill="none" class="svg-stroke" stroke-width="1.5"/>
+            <text x="160" y="79" class="svg-ink" text-anchor="middle">diff = left − right</text>
+            <line x1="160" y1="90" x2="160" y2="108" class="svg-stroke" stroke-width="1.5"/>
+            <path d="M160 108 L220 134 L160 160 L100 134 Z" fill="none" class="svg-copper" style="stroke:var(--copper)" stroke-width="1.5" fill-opacity="0"/>
+            <text x="160" y="138" class="svg-copper" text-anchor="middle">compare</text>
+            <line x1="100" y1="134" x2="40" y2="134" class="svg-stroke" stroke-width="1.5"/>
+            <line x1="40" y1="134" x2="40" y2="176" class="svg-stroke" stroke-width="1.5"/>
+            <line x1="220" y1="134" x2="280" y2="134" class="svg-stroke" stroke-width="1.5"/>
+            <line x1="280" y1="134" x2="280" y2="176" class="svg-stroke" stroke-width="1.5"/>
+            <line x1="160" y1="160" x2="160" y2="176" class="svg-stroke" stroke-width="1.5"/>
+            <text x="44" y="126" class="svg-muted" font-size="10">diff &gt; 25</text>
+            <text x="224" y="126" class="svg-muted" font-size="10">diff &lt; −25</text>
+            <rect x="4" y="176" width="92" height="30" rx="6" class="svg-teal"/>
+            <text x="50" y="196" fill="#fff" text-anchor="middle">angle + 1</text>
+            <rect x="114" y="176" width="92" height="30" rx="6" fill="none" class="svg-stroke" stroke-width="1.5"/>
+            <text x="160" y="196" class="svg-ink" text-anchor="middle">hold</text>
+            <rect x="224" y="176" width="92" height="30" rx="6" class="svg-teal"/>
+            <text x="270" y="196" fill="#fff" text-anchor="middle">angle − 1</text>
+            <line x1="50" y1="206" x2="50" y2="228" class="svg-stroke" stroke-width="1.5"/>
+            <line x1="160" y1="206" x2="160" y2="228" class="svg-stroke" stroke-width="1.5"/>
+            <line x1="270" y1="206" x2="270" y2="228" class="svg-stroke" stroke-width="1.5"/>
+            <line x1="50" y1="228" x2="270" y2="228" class="svg-stroke" stroke-width="1.5"/>
+            <text x="160" y="250" class="svg-ink" text-anchor="middle">servo.write(angle) → repeat</text>
+          </g>
+        </svg>
+        <figcaption><b>The loop.</b> The “deadband” (25) stops the head twitching when both eyes see almost the same light. Moving just 1° per loop keeps motion smooth.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============ PARTS ============ -->
+  <section id="parts">
+    <div class="sec-head">
+      <span class="label">02 · Gather</span>
+      <h2>Parts from your Starter Kit</h2>
+      <p>Everything below comes in the official Arduino Starter Kit. The LEDs are optional but make it much easier to see what the code is deciding.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Qty</th><th>Part</th><th>What it does here</th></tr></thead>
+        <tbody>
+          <tr><td class="qty">1</td><td>Arduino UNO + USB cable</td><td>Runs the program, powers everything.</td></tr>
+          <tr><td class="qty">1</td><td>Breadboard</td><td>Lets you connect parts without soldering.</td></tr>
+          <tr><td class="qty">2</td><td>Photoresistors (LDR) — small discs with a squiggly line</td><td>The left and right eyes.</td></tr>
+          <tr><td class="qty">2</td><td>10 kΩ resistors <span class="swatch" style="background:#6B3E1E"></span><span class="swatch" style="background:#1A1A1A"></span><span class="swatch" style="background:#E8801E"></span></td><td>Bottom half of each voltage divider.</td></tr>
+          <tr><td class="qty">1</td><td>Servo motor (with the plastic arms, “horns”)</td><td>The neck that turns the head.</td></tr>
+          <tr><td class="qty">3</td><td>Male header pins (break 3 off the strip)</td><td>Adapter so the servo plug fits the breadboard.</td></tr>
+          <tr><td class="qty">1</td><td>100 µF capacitor (blue/black can, stripe = −)</td><td>Smooths the power spike when the servo moves.</td></tr>
+          <tr><td class="qty">2</td><td>LEDs (any color) — optional</td><td>Show “turning left” / “turning right”.</td></tr>
+          <tr><td class="qty">2</td><td>220 Ω resistors <span class="swatch" style="background:#C8261E"></span><span class="swatch" style="background:#C8261E"></span><span class="swatch" style="background:#6B3E1E"></span> — optional</td><td>Protect the LEDs from too much current.</td></tr>
+          <tr><td class="qty">~16</td><td>Jumper wires</td><td>Connections. Grab a few long ones for the head.</td></tr>
+          <tr><td class="qty">—</td><td>Cardboard, tape, scissors (not in the kit)</td><td>To build the head that sits on the servo.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:28px">Reading resistor colors</h3>
+    <p class="prose" style="color:var(--muted);margin-top:6px">Resistors aren’t labeled with numbers; they use colored bands. Read from the side away from the gold band. Not sure? Use the <a href="https://www.digikey.com/en/resources/conversion-calculators/conversion-calculator-resistor-color-code" target="_blank" rel="noopener">DigiKey color code calculator</a>.</p>
+    <div class="resistors" style="margin-top:14px">
+      <div class="resistor">
+        <svg viewBox="0 0 260 46" aria-label="10 kilo-ohm resistor: brown, black, orange, gold">
+          <line x1="0" y1="23" x2="260" y2="23" stroke="#9AA4A8" stroke-width="3"/>
+          <rect x="60" y="8" width="140" height="30" rx="14" fill="#D9C6A0"/>
+          <rect x="82" y="8" width="10" height="30" fill="#6B3E1E"/>
+          <rect x="102" y="8" width="10" height="30" fill="#1A1A1A"/>
+          <rect x="122" y="8" width="10" height="30" fill="#E8801E"/>
+          <rect x="170" y="8" width="10" height="30" fill="#C9A227"/>
+        </svg>
+        <span class="val">10 kΩ</span>
+        <p>brown (1) · black (0) · orange (×1000) = 10 000 Ω. Used ×2 for the eyes.</p>
+      </div>
+      <div class="resistor">
+        <svg viewBox="0 0 260 46" aria-label="220 ohm resistor: red, red, brown, gold">
+          <line x1="0" y1="23" x2="260" y2="23" stroke="#9AA4A8" stroke-width="3"/>
+          <rect x="60" y="8" width="140" height="30" rx="14" fill="#D9C6A0"/>
+          <rect x="82" y="8" width="10" height="30" fill="#C8261E"/>
+          <rect x="102" y="8" width="10" height="30" fill="#C8261E"/>
+          <rect x="122" y="8" width="10" height="30" fill="#6B3E1E"/>
+          <rect x="170" y="8" width="10" height="30" fill="#C9A227"/>
+        </svg>
+        <span class="val">220 Ω</span>
+        <p>red (2) · red (2) · brown (×10) = 220 Ω. Used ×2 for the LEDs.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ WIRING ============ -->
+  <section id="wiring">
+    <div class="sec-head">
+      <span class="label">03 · Build</span>
+      <h2>Wire it on the breadboard</h2>
+      <p>First build everything flat on the breadboard and test it. Only after it works do you move the eyes onto the servo (step 06). Unplug the USB cable while you wire.</p>
+    </div>
+
+    <div class="callout" style="margin-bottom:18px"><strong>Breadboard basics.</strong> The long rails along the edge are connected <em>horizontally</em> (red + for 5V, blue − for GND). In the middle area, each numbered <em>column</em> of 5 holes (a–e) is connected <em>vertically</em>. Two legs in the same column are connected. New to breadboards? Read <a href="https://learn.sparkfun.com/tutorials/how-to-use-a-breadboard" target="_blank" rel="noopener">SparkFun: How to use a breadboard</a>.</div>
+
+    <figure class="figure" style="margin:0">
+      <div class="scroll">
+        <svg id="bb" viewBox="0 0 860 480" style="min-width:680px;width:100%;height:auto" role="img" aria-label="Breadboard wiring diagram for the light seeker">
+          <!-- Breadboard -->
+          <rect x="150" y="50" width="572" height="164" rx="8" fill="#F1EFE6" stroke="#CFCBBB"/>
+          <rect x="150" y="100" width="572" height="4" fill="#E2DED0"/>
+          <line x1="165" y1="62" x2="712" y2="62" stroke="#D2342A" stroke-width="1.5"/>
+          <line x1="165" y1="97" x2="712" y2="97" stroke="#2A62C9" stroke-width="1.5"/>
+          <text x="158" y="74" fill="#D2342A" font-size="12" font-weight="700">+</text>
+          <text x="158" y="93" fill="#2A62C9" font-size="12" font-weight="700">−</text>
+          <g id="holes"></g>
+          <g id="rowLabels" font-size="9" fill="#8A8676"></g>
+          <g id="colLabels" font-size="8" fill="#8A8676" text-anchor="middle"></g>
+
+          <!-- Arduino -->
+          <rect x="70" y="296" width="660" height="170" rx="10" fill="#0E7C86"/>
+          <rect x="82" y="300" width="636" height="18" rx="3" fill="#1B1B1B"/>
+          <text x="400" y="400" fill="#BFE6E6" font-size="26" font-family="Chakra Petch, sans-serif" font-weight="700" text-anchor="middle">ARDUINO UNO</text>
+          <text x="400" y="424" fill="#8CCACA" font-size="11" text-anchor="middle">pins stylized: find each label printed on your board</text>
+          <g font-size="11" fill="#FFFFFF" text-anchor="middle" font-weight="500">
+            <text x="100" y="336">GND</text>
+            <text x="126" y="352">5V</text>
+            <text x="252" y="336">A0</text>
+            <text x="342" y="336">A1</text>
+            <text x="396" y="336">~5</text>
+            <text x="486" y="336">~6</text>
+            <text x="666" y="336">~9</text>
+          </g>
+          <g fill="#C9C9C9">
+            <rect x="96" y="305" width="8" height="8"/><rect x="122" y="305" width="8" height="8"/>
+            <rect x="248" y="305" width="8" height="8"/><rect x="338" y="305" width="8" height="8"/>
+            <rect x="392" y="305" width="8" height="8"/><rect x="482" y="305" width="8" height="8"/>
+            <rect x="662" y="305" width="8" height="8"/>
+          </g>
+
+          <!-- Power wires from Arduino to rails -->
+          <path d="M126 309 V70 H180" fill="none" stroke="#D2342A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M100 309 V88 H180" fill="none" stroke="#222" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+          <!-- LEFT EYE (cols 3,5) -->
+          <path d="M216 120 Q205 95 198 70" fill="none" stroke="#D2342A" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="252" y1="88" x2="252" y2="120" stroke="#9AA4A8" stroke-width="2"/>
+          <rect x="247" y="95" width="10" height="19" rx="4" fill="#D9C6A0"/>
+          <rect x="247" y="98" width="10" height="3" fill="#6B3E1E"/><rect x="247" y="103" width="10" height="3" fill="#1A1A1A"/><rect x="247" y="108" width="10" height="3" fill="#E8801E"/>
+          <line x1="216" y1="174" x2="227" y2="164" stroke="#9AA4A8" stroke-width="2"/>
+          <line x1="252" y1="174" x2="241" y2="164" stroke="#9AA4A8" stroke-width="2"/>
+          <circle cx="234" cy="158" r="12" fill="#E7C44A" stroke="#6B551B" stroke-width="2"/>
+          <path d="M227 158q2-4 4 0t4 0t4 0" fill="none" stroke="#6B551B" stroke-width="1.5"/>
+          <path d="M252 192 V309" fill="none" stroke="#E6C300" stroke-width="4" stroke-linecap="round"/>
+
+          <!-- RIGHT EYE (cols 8,10) -->
+          <path d="M306 120 Q295 95 288 70" fill="none" stroke="#D2342A" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="342" y1="88" x2="342" y2="120" stroke="#9AA4A8" stroke-width="2"/>
+          <rect x="337" y="95" width="10" height="19" rx="4" fill="#D9C6A0"/>
+          <rect x="337" y="98" width="10" height="3" fill="#6B3E1E"/><rect x="337" y="103" width="10" height="3" fill="#1A1A1A"/><rect x="337" y="108" width="10" height="3" fill="#E8801E"/>
+          <line x1="306" y1="174" x2="317" y2="164" stroke="#9AA4A8" stroke-width="2"/>
+          <line x1="342" y1="174" x2="331" y2="164" stroke="#9AA4A8" stroke-width="2"/>
+          <circle cx="324" cy="158" r="12" fill="#E7C44A" stroke="#6B551B" stroke-width="2"/>
+          <path d="M317 158q2-4 4 0t4 0t4 0" fill="none" stroke="#6B551B" stroke-width="1.5"/>
+          <path d="M342 192 V309" fill="none" stroke="#2EA44F" stroke-width="4" stroke-linecap="round"/>
+
+          <!-- LEFT LED (pin 5, cols 13-16) -->
+          <line x1="396" y1="138" x2="432" y2="138" stroke="#9AA4A8" stroke-width="2"/>
+          <rect x="403" y="133" width="22" height="10" rx="4" fill="#D9C6A0"/>
+          <rect x="407" y="133" width="3" height="10" fill="#C8261E"/><rect x="412" y="133" width="3" height="10" fill="#C8261E"/><rect x="417" y="133" width="3" height="10" fill="#6B3E1E"/>
+          <line x1="432" y1="120" x2="438" y2="108" stroke="#9AA4A8" stroke-width="2"/>
+          <line x1="450" y1="88" x2="446" y2="100" stroke="#9AA4A8" stroke-width="2"/>
+          <circle cx="442" cy="104" r="9" fill="#FF5A4E" stroke="#A3261C" stroke-width="1.5"/>
+          <path d="M396 192 V309" fill="none" stroke="#8B5CF6" stroke-width="4" stroke-linecap="round"/>
+
+          <!-- RIGHT LED (pin 6, cols 18-21) -->
+          <line x1="486" y1="138" x2="522" y2="138" stroke="#9AA4A8" stroke-width="2"/>
+          <rect x="493" y="133" width="22" height="10" rx="4" fill="#D9C6A0"/>
+          <rect x="497" y="133" width="3" height="10" fill="#C8261E"/><rect x="502" y="133" width="3" height="10" fill="#C8261E"/><rect x="507" y="133" width="3" height="10" fill="#6B3E1E"/>
+          <line x1="522" y1="120" x2="528" y2="108" stroke="#9AA4A8" stroke-width="2"/>
+          <line x1="540" y1="88" x2="536" y2="100" stroke="#9AA4A8" stroke-width="2"/>
+          <circle cx="532" cy="104" r="9" fill="#FFD23F" stroke="#9A7A10" stroke-width="1.5"/>
+          <path d="M486 192 V309" fill="none" stroke="#8B5CF6" stroke-width="4" stroke-linecap="round"/>
+
+          <!-- CAPACITOR across rails (col 23) -->
+          <line x1="576" y1="70" x2="592" y2="73" stroke="#9AA4A8" stroke-width="2"/>
+          <line x1="576" y1="88" x2="592" y2="85" stroke="#9AA4A8" stroke-width="2"/>
+          <rect x="590" y="66" width="34" height="26" rx="5" fill="#2B4C8C"/>
+          <rect x="590" y="84" width="34" height="8" fill="#C9D3E6"/>
+          <text x="604" y="90" fill="#2B4C8C" font-size="8" text-anchor="middle">− − −</text>
+
+          <!-- SERVO header (cols 26,27,28) -->
+          <path d="M630 120 V88" fill="none" stroke="#222" stroke-width="3.5" stroke-linecap="round"/>
+          <path d="M648 120 Q657 95 666 70" fill="none" stroke="#D2342A" stroke-width="3.5" stroke-linecap="round"/>
+          <rect x="626" y="152" width="8" height="8" fill="#333"/><rect x="644" y="152" width="8" height="8" fill="#333"/><rect x="662" y="152" width="8" height="8" fill="#333"/>
+          <path d="M630 156 L638 144 H748" fill="none" stroke="#6B3E1E" stroke-width="3"/>
+          <path d="M648 156 L656 150 H748" fill="none" stroke="#D2342A" stroke-width="3"/>
+          <path d="M666 156 L674 162 H748" fill="none" stroke="#F08A24" stroke-width="3"/>
+          <path d="M666 192 V309" fill="none" stroke="#F08A24" stroke-width="4" stroke-linecap="round"/>
+          <!-- servo body -->
+          <rect x="748" y="126" width="96" height="54" rx="5" fill="#1F5FA8"/>
+          <circle cx="772" cy="126" r="13" fill="#E9EEF2"/>
+          <rect x="762" y="119" width="74" height="13" rx="6.5" fill="#F4F6F8" stroke="#9AA7B2"/>
+          <text x="796" y="166" fill="#DCE8F6" font-size="11" text-anchor="middle">SERVO</text>
+
+          <!-- Callout labels -->
+          <g font-size="11" class="svg-ink">
+            <text x="200" y="40">left eye → A0</text>
+            <text x="290" y="40">right eye → A1</text>
+            <text x="404" y="40">LEDs (optional)</text>
+            <text x="566" y="40">100 µF</text>
+            <text x="620" y="40">servo plug</text>
+          </g>
+          <g font-size="10" class="svg-muted">
+            <text x="752" y="200">brown → GND</text>
+            <text x="752" y="214">red → 5V</text>
+            <text x="752" y="228">orange → pin 9</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption>Top half of the breadboard (holes a–e) and a stylized Arduino. Column numbers match the table below. On a real UNO the digital pins (5, 6, 9) are on one edge and 5V, GND, A0, A1 on the opposite edge; the drawing puts them together to keep wires short.</figcaption>
+    </figure>
+
+    <h3 style="margin-top:28px">Connection table</h3>
+    <div class="table-wrap" style="margin-top:10px">
+      <table>
+        <thead><tr><th>Part</th><th>From</th><th>To</th></tr></thead>
+        <tbody>
+          <tr><td><span class="swatch" style="background:#D2342A"></span>Power</td><td>Arduino <b>5V</b></td><td>red <b>+</b> rail</td></tr>
+          <tr><td><span class="swatch" style="background:#222"></span>Ground</td><td>Arduino <b>GND</b></td><td>blue <b>−</b> rail</td></tr>
+          <tr><td>Left eye (LDR)</td><td>leg 1 in column <b>3</b></td><td>leg 2 in column <b>5</b></td></tr>
+          <tr><td></td><td>jumper from column 3</td><td><b>+</b> rail</td></tr>
+          <tr><td></td><td>10 kΩ from column 5</td><td><b>−</b> rail</td></tr>
+          <tr><td><span class="swatch" style="background:#E6C300"></span></td><td>jumper from column 5</td><td>Arduino <b>A0</b></td></tr>
+          <tr><td>Right eye (LDR)</td><td>leg 1 in column <b>8</b></td><td>leg 2 in column <b>10</b></td></tr>
+          <tr><td></td><td>jumper from column 8</td><td><b>+</b> rail</td></tr>
+          <tr><td></td><td>10 kΩ from column 10</td><td><b>−</b> rail</td></tr>
+          <tr><td><span class="swatch" style="background:#2EA44F"></span></td><td>jumper from column 10</td><td>Arduino <b>A1</b></td></tr>
+          <tr><td>Servo</td><td>3 header pins in columns <b>26, 27, 28</b></td><td>plug servo in: brown → 26, red → 27, orange → 28</td></tr>
+          <tr><td></td><td>column 26 (brown)</td><td><b>−</b> rail</td></tr>
+          <tr><td></td><td>column 27 (red)</td><td><b>+</b> rail</td></tr>
+          <tr><td><span class="swatch" style="background:#F08A24"></span></td><td>column 28 (orange / signal)</td><td>Arduino pin <b>9</b></td></tr>
+          <tr><td>Capacitor 100 µF</td><td>long leg in <b>+</b> rail</td><td>short leg (stripe side) in <b>−</b> rail</td></tr>
+          <tr><td>Left LED (opt.)</td><td>pin <b>5</b> → column 13 → 220 Ω → column 15</td><td>LED long leg column 15, short leg <b>−</b> rail</td></tr>
+          <tr><td>Right LED (opt.)</td><td>pin <b>6</b> → column 18 → 220 Ω → column 20</td><td>LED long leg column 20, short leg <b>−</b> rail</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout warn" style="margin-top:18px"><strong>Polarity matters for three parts.</strong> The <b>capacitor</b> (stripe = −; backwards it can pop), the <b>LEDs</b> (long leg = +) and the <b>servo</b> (brown/black = GND). Photoresistors and resistors work either way round.</div>
+
+    <h3 style="margin-top:28px">Wiring checklist</h3>
+    <div class="progress" style="margin-top:10px"><span id="progTxt">0 / 8 done</span><div class="bar"><i id="progBar"></i></div></div>
+    <ol class="steps" id="steps" style="margin-top:12px">
+      <li><input type="checkbox" id="s1" aria-label="Step 1 done"><div class="step-body"><b>Power rails</b><span>USB unplugged. Wire Arduino 5V → red + rail and GND → blue − rail.</span></div></li>
+      <li><input type="checkbox" id="s2" aria-label="Step 2 done"><div class="step-body"><b>Left eye divider</b><span>LDR in columns 3 and 5. Jumper col 3 → +. 10 kΩ col 5 → −. Yellow jumper col 5 → A0.</span></div></li>
+      <li><input type="checkbox" id="s3" aria-label="Step 3 done"><div class="step-body"><b>Right eye divider</b><span>Same pattern in columns 8 and 10. Green jumper col 10 → A1.</span></div></li>
+      <li><input type="checkbox" id="s4" aria-label="Step 4 done"><div class="step-body"><b>Test the eyes</b><span>Plug in USB, upload the <a href="#code">test sketch</a>, open the Serial Monitor. Cover each LDR with a finger — its number should drop.</span></div></li>
+      <li><input type="checkbox" id="s5" aria-label="Step 5 done"><div class="step-body"><b>Servo + capacitor</b><span>Unplug USB. Push 3 header pins into columns 26–28, plug the servo in (brown on 26). Wire 26 → −, 27 → +, 28 → pin 9. Add the 100 µF capacitor across the rails.</span></div></li>
+      <li><input type="checkbox" id="s6" aria-label="Step 6 done"><div class="step-body"><b>Indicator LEDs (optional)</b><span>Pin 5 → 220 Ω → left LED; pin 6 → 220 Ω → right LED. Short legs to −.</span></div></li>
+      <li><input type="checkbox" id="s7" aria-label="Step 7 done"><div class="step-body"><b>Upload Light Seeker</b><span>Upload the full sketch. The servo jumps to 90° (straight ahead). Shine light on one eye — the LED on that side lights and the servo turns.</span></div></li>
+      <li><input type="checkbox" id="s8" aria-label="Step 8 done"><div class="step-body"><b>Build the head</b><span>Move the eyes onto the servo horn with the <a href="#head">cardboard head</a> so they turn with it.</span></div></li>
+    </ol>
+  </section>
+
+  <!-- ============ CODE ============ -->
+  <section id="code">
+    <div class="sec-head">
+      <span class="label">04 · Program</span>
+      <h2>The code</h2>
+      <p>Install the free <a href="https://www.arduino.cc/en/software" target="_blank" rel="noopener">Arduino IDE</a>, plug in the UNO, then pick <b>Tools → Board → Arduino UNO</b> and <b>Tools → Port</b> (the one that appears when you plug in). Paste a sketch, click the <b>→ Upload</b> arrow.</p>
+    </div>
+
+    <div class="stack">
+      <h3>Sketch A · Test the eyes first</h3>
+      <p class="prose" style="color:var(--muted)">This only prints the two readings. Open <b>Tools → Serial Monitor</b> and set it to <b>9600 baud</b>. Cover and uncover each LDR and watch the numbers move.</p>
+      <div class="code-block">
+        <div class="code-head"><span>eye_test.ino</span><button class="copy" type="button" data-target="codeTest">Copy</button></div>
+        <pre><code id="codeTest">// Sketch A: print both light readings so you can check the wiring
+
+void setup() {
+  Serial.begin(9600);          // open the Serial Monitor at 9600 baud
+}
+
+void loop() {
+  int left  = analogRead(A0);  // 0 = dark ... 1023 = very bright
+  int right = analogRead(A1);
+
+  Serial.print("L: ");
+  Serial.print(left);
+  Serial.print("   R: ");
+  Serial.println(right);
+
+  delay(200);                  // 5 readings per second
+}</code></pre>
+      </div>
+
+      <div class="callout"><strong>What to expect.</strong> Room light: roughly 300–700 on both. Finger over an eye: drops below ~150. Phone flashlight: 850+. If both numbers are nearly the same when uncovered, great. If one is always ~50–100 higher, note the difference; you’ll use it as <code>OFFSET</code> below.</div>
+
+      <h3 style="margin-top:12px">Sketch B · Light Seeker</h3>
+      <div class="code-block">
+        <div class="code-head"><span>light_seeker.ino</span><button class="copy" type="button" data-target="codeMain">Copy</button></div>
+        <pre><code id="codeMain">/*
+  Light Seeker: a servo head that turns toward the brightest light.
+  Built with the Arduino Starter Kit.
+*/
+#include &lt;Servo.h&gt;
+
+Servo neck;                  // the servo that turns the head
+
+const int LEFT_EYE  = A0;    // left photoresistor divider
+const int RIGHT_EYE = A1;    // right photoresistor divider
+const int SERVO_PIN = 9;
+const int LEFT_LED  = 5;     // lights while turning left
+const int RIGHT_LED = 6;     // lights while turning right
+
+const int DEADBAND = 25;     // ignore differences smaller than this
+const int STEP     = 1;      // degrees to move each loop
+const int OFFSET   = 0;      // calibration: added to the right eye
+
+int angle = 90;              // start looking straight ahead
+
+void setup() {
+  neck.attach(SERVO_PIN);
+  neck.write(angle);
+  pinMode(LEFT_LED, OUTPUT);
+  pinMode(RIGHT_LED, OUTPUT);
+  Serial.begin(9600);
+  delay(500);                // let the servo reach 90 degrees
+}
+
+void loop() {
+  int left  = analogRead(LEFT_EYE);
+  int right = analogRead(RIGHT_EYE) + OFFSET;
+  int diff  = left - right;
+
+  if (diff &gt; DEADBAND) {
+    angle = angle + STEP;           // left is brighter: turn left
+    digitalWrite(LEFT_LED, HIGH);
+    digitalWrite(RIGHT_LED, LOW);
+  } else if (diff &lt; -DEADBAND) {
+    angle = angle - STEP;           // right is brighter: turn right
+    digitalWrite(LEFT_LED, LOW);
+    digitalWrite(RIGHT_LED, HIGH);
+  } else {
+    digitalWrite(LEFT_LED, LOW);    // about equal: hold still
+    digitalWrite(RIGHT_LED, LOW);
+  }
+
+  angle = constrain(angle, 0, 180); // servo can only do 0..180
+  neck.write(angle);
+
+  Serial.print("L: ");       Serial.print(left);
+  Serial.print("  R: ");     Serial.print(right);
+  Serial.print("  angle: "); Serial.println(angle);
+
+  delay(15);                 // small pause so the servo can keep up
+}</code></pre>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Line</th><th>What it means</th></tr></thead>
+          <tbody>
+            <tr><td><code>#include &lt;Servo.h&gt;</code></td><td>Loads the <a href="https://docs.arduino.cc/libraries/servo/" target="_blank" rel="noopener">Servo library</a> (already installed with the IDE).</td></tr>
+            <tr><td><code>const int DEADBAND = 25;</code></td><td>How different the eyes must be before the head moves. Bigger = calmer but less precise.</td></tr>
+            <tr><td><code>analogRead(A0)</code></td><td>Measures 0–5 V and returns 0–1023. <a href="https://docs.arduino.cc/language-reference/en/functions/analog-io/analogRead/" target="_blank" rel="noopener">Reference</a>.</td></tr>
+            <tr><td><code>diff = left - right</code></td><td>Positive → left eye sees more light. Negative → right eye does.</td></tr>
+            <tr><td><code>constrain(angle, 0, 180)</code></td><td>Keeps the angle inside what the servo can do. <a href="https://docs.arduino.cc/language-reference/en/functions/math/constrain/" target="_blank" rel="noopener">Reference</a>.</td></tr>
+            <tr><td><code>neck.write(angle)</code></td><td>Tells the servo which angle to go to. <a href="https://docs.arduino.cc/libraries/servo/" target="_blank" rel="noopener">Reference</a>.</td></tr>
+            <tr><td><code>delay(15)</code></td><td>Waits 15 ms. Raise to 30 for slower, smoother tracking.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ HEAD ============ -->
+  <section id="head">
+    <div class="sec-head">
+      <span class="label">05 · Mount</span>
+      <h2>Build the cardboard head</h2>
+      <p>For real light-following, the eyes must turn with the servo. Otherwise it can never tell when it’s facing the light. A strip of cardboard on the servo horn does the job.</p>
+    </div>
+    <div class="split">
+      <figure class="figure" style="margin:0">
+        <svg viewBox="0 0 320 250" role="img" aria-label="Side and top view of the cardboard head: two LDRs separated by a divider wall, taped on the servo horn">
+          <text x="10" y="18" class="svg-muted" font-size="11">TOP VIEW</text>
+          <!-- top view -->
+          <rect x="60" y="60" width="200" height="50" rx="6" fill="#C9B79A"/>
+          <rect x="156" y="20" width="8" height="90" fill="#8E7B5E"/>
+          <circle cx="110" cy="80" r="12" fill="#E7C44A" stroke="#6B551B" stroke-width="2"/>
+          <circle cx="210" cy="80" r="12" fill="#E7C44A" stroke="#6B551B" stroke-width="2"/>
+          <path d="M110 80 L80 30" stroke="#E0A020" stroke-width="1.5" stroke-dasharray="3 3"/>
+          <path d="M210 80 L240 30" stroke="#E0A020" stroke-width="1.5" stroke-dasharray="3 3"/>
+          <text x="96" y="104" fill="#3B2E1A" font-size="10">LEFT</text>
+          <text x="194" y="104" fill="#3B2E1A" font-size="10">RIGHT</text>
+          <text x="170" y="36" class="svg-ink" font-size="10">divider wall</text>
+          <circle cx="160" cy="85" r="5" fill="#F4F6F8" stroke="#555"/>
+          <!-- side view -->
+          <text x="10" y="140" class="svg-muted" font-size="11">SIDE VIEW</text>
+          <rect x="120" y="196" width="80" height="44" rx="4" fill="#1F5FA8"/>
+          <rect x="150" y="186" width="20" height="10" fill="#E9EEF2"/>
+          <rect x="60" y="178" width="200" height="8" fill="#C9B79A"/>
+          <rect x="156" y="140" width="8" height="38" fill="#8E7B5E"/>
+          <line x1="104" y1="178" x2="104" y2="166" stroke="#9AA4A8" stroke-width="2"/>
+          <line x1="116" y1="178" x2="116" y2="166" stroke="#9AA4A8" stroke-width="2"/>
+          <rect x="100" y="158" width="20" height="8" rx="4" fill="#E7C44A"/>
+          <line x1="204" y1="178" x2="204" y2="166" stroke="#9AA4A8" stroke-width="2"/>
+          <line x1="216" y1="178" x2="216" y2="166" stroke="#9AA4A8" stroke-width="2"/>
+          <rect x="200" y="158" width="20" height="8" rx="4" fill="#E7C44A"/>
+          <path d="M104 186 C100 220 70 230 40 236" fill="none" stroke="#E6C300" stroke-width="2.5"/>
+          <path d="M116 186 C112 222 80 234 40 242" fill="none" stroke="#D2342A" stroke-width="2.5"/>
+          <text x="10" y="232" class="svg-muted" font-size="9">long</text>
+          <text x="6" y="244" class="svg-muted" font-size="9">jumpers</text>
+          <text x="208" y="236" fill="#DCE8F6" font-size="9">servo</text>
+        </svg>
+        <figcaption>The divider wall is the secret ingredient: it shades one eye when the light comes from the side, which makes the left/right difference much bigger.</figcaption>
+      </figure>
+      <ol class="steps">
+        <li><div></div><div class="step-body"><b>Cut the base</b><span>A cardboard strip about 8 × 3 cm. Poke a hole in the middle for the horn screw, or just hot-glue/tape it to the long servo horn.</span></div></li>
+        <li><div></div><div class="step-body"><b>Add the wall</b><span>Glue a 3 × 4 cm cardboard wall standing up in the middle, pointing forward.</span></div></li>
+        <li><div></div><div class="step-body"><b>Place the eyes</b><span>Push each LDR’s legs through the base, one on each side of the wall, faces up and slightly outward.</span></div></li>
+        <li><div></div><div class="step-body"><b>Connect with long jumpers</b><span>Pull each LDR out of the breadboard and replace it with two jumper wires going to the same holes. Twist each LDR leg tightly around a jumper tip and wrap with tape (or use female–male jumpers if you have them). Leave slack so wires don’t pull when the head turns.</span></div></li>
+        <li><div></div><div class="step-body"><b>Center first</b><span>Power up, let the servo go to 90°, then press the horn on so the head faces straight forward.</span></div></li>
+        <li><div></div><div class="step-body"><b>Play</b><span>Dim the room, shine a phone flashlight from ~50 cm away and move it slowly left and right.</span></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ TROUBLESHOOTING ============ -->
+  <section id="fix">
+    <div class="sec-head">
+      <span class="label">06 · Debug</span>
+      <h2>Troubleshooting</h2>
+      <p>Almost every problem shows up in the Serial Monitor. Keep it open while testing.</p>
+    </div>
+    <details open>
+      <summary>The head turns <em>away</em> from the light</summary>
+      <div><p>Your servo turns the other way, or the eyes are swapped. Easiest fix: swap the yellow and green wires at A0 and A1. Or in the code swap <code>angle + STEP</code> and <code>angle - STEP</code>.</p></div>
+    </details>
+    <details>
+      <summary>A reading is stuck at 0 or 1023</summary>
+      <div><p><b>Stuck at 1023:</b> the 10 kΩ resistor isn’t reaching the − rail (or the jumper went to + by mistake). <b>Stuck at 0:</b> the LDR isn’t reaching the + rail, or the A0/A1 wire is in the wrong column. Check that the LDR leg, the resistor and the A0 wire share one column.</p><p>Tip: many breadboards have a break in the middle of each rail. If your rail lines have a gap, bridge it with a short jumper.</p></div>
+    </details>
+    <details>
+      <summary>The servo shakes or twitches when it should hold still</summary>
+      <div><p>Increase <code>DEADBAND</code> to 40–60. Also check the 100 µF capacitor is in (stripe to −). Room lights that flicker (some LEDs) add noise; try daylight or a flashlight.</p></div>
+    </details>
+    <details>
+      <summary>The Arduino resets or disconnects when the servo moves</summary>
+      <div><p>The servo is pulling more current than USB can give. Make sure the capacitor is installed, use a short USB cable plugged straight into the computer (not a hub), and don’t press on the horn while it moves.</p></div>
+    </details>
+    <details>
+      <summary>It always drifts to one side</summary>
+      <div><p>The two LDRs aren’t identical. With both eyes in the same light, read L and R in the Serial Monitor. If L is always ~60 higher, set <code>OFFSET = 60</code>. If R is higher, use a negative number.</p></div>
+    </details>
+    <details>
+      <summary>Upload fails (“port not found” / “not in sync”)</summary>
+      <div><p>Choose the right board and port in the Tools menu, try another USB cable (some are charge-only), and close the Serial Monitor in other windows. See the official <a href="https://support.arduino.cc/hc/en-us/articles/4403365313810-If-your-sketch-doesn-t-upload" target="_blank" rel="noopener">upload troubleshooting guide</a>.</p></div>
+    </details>
+  </section>
+
+  <!-- ============ GO FURTHER ============ -->
+  <section id="more">
+    <div class="sec-head">
+      <span class="label">07 · Level up</span>
+      <h2>Ideas once it works</h2>
+    </div>
+    <div class="trio">
+      <div class="part-role"><h3>Proportional speed</h3><p>Move faster when the difference is big: <code>angle += diff / 50;</code> instead of a fixed step. Smoother and quicker.</p></div>
+      <div class="part-role"><h3>Brightness buzzer</h3><p>Add the kit’s piezo and play a tone whose pitch rises with <code>left + right</code>. Now it sings when it finds the light.</p></div>
+      <div class="part-role"><h3>Solar tracker</h3><p>Stick a tiny solar cell on the head. This exact idea is how real solar panels follow the sun.</p></div>
+    </div>
+  </section>
+
+  <!-- ============ LINKS ============ -->
+  <section id="learn">
+    <div class="sec-head">
+      <span class="label">08 · Learn more</span>
+      <h2>Links worth reading</h2>
+    </div>
+    <div class="links">
+      <a class="link-card" href="https://www.arduino.cc/en/software" target="_blank" rel="noopener"><span class="src">arduino.cc</span><b>Download the Arduino IDE</b><span>The free app you write and upload code with.</span></a>
+      <a class="link-card" href="https://docs.arduino.cc/software/ide-v2/tutorials/getting-started-ide-v2/" target="_blank" rel="noopener"><span class="src">docs.arduino.cc</span><b>Getting started with IDE 2</b><span>Tour of the editor, boards, ports and uploading.</span></a>
+      <a class="link-card" href="https://docs.arduino.cc/software/ide-v2/tutorials/ide-v2-serial-monitor/" target="_blank" rel="noopener"><span class="src">docs.arduino.cc</span><b>Using the Serial Monitor</b><span>Your #1 debugging tool for this project.</span></a>
+      <a class="link-card" href="https://docs.arduino.cc/built-in-examples/basics/AnalogReadSerial/" target="_blank" rel="noopener"><span class="src">docs.arduino.cc</span><b>AnalogReadSerial example</b><span>Official version of the eye-test sketch.</span></a>
+      <a class="link-card" href="https://docs.arduino.cc/libraries/servo/" target="_blank" rel="noopener"><span class="src">docs.arduino.cc</span><b>Servo library reference</b><span>attach(), write(), read() and more.</span></a>
+      <a class="link-card" href="https://docs.arduino.cc/learn/electronics/servo-motors/" target="_blank" rel="noopener"><span class="src">docs.arduino.cc</span><b>Servo motor basics</b><span>How hobby servos work inside, with Knob and Sweep examples.</span></a>
+      <a class="link-card" href="https://learn.adafruit.com/photocells" target="_blank" rel="noopener"><span class="src">learn.adafruit.com</span><b>Photocells (LDR) guide</b><span>Graphs of resistance vs. light and how to read them.</span></a>
+      <a class="link-card" href="https://learn.sparkfun.com/tutorials/voltage-dividers" target="_blank" rel="noopener"><span class="src">learn.sparkfun.com</span><b>Voltage dividers</b><span>Why the LDR + 10 kΩ trick turns light into voltage.</span></a>
+      <a class="link-card" href="https://learn.sparkfun.com/tutorials/how-to-use-a-breadboard" target="_blank" rel="noopener"><span class="src">learn.sparkfun.com</span><b>How to use a breadboard</b><span>Which holes are connected, with photos.</span></a>
+      <a class="link-card" href="https://www.tinkercad.com/circuits" target="_blank" rel="noopener"><span class="src">tinkercad.com</span><b>Tinkercad Circuits</b><span>Free online simulator. Build this circuit virtually before touching wires.</span></a>
+      <a class="link-card" href="https://docs.arduino.cc/hardware/uno-rev3/" target="_blank" rel="noopener"><span class="src">docs.arduino.cc</span><b>Arduino UNO R3 pinout</b><span>Where 5V, GND, A0, A1 and pin 9 really are on your board.</span></a>
+      <a class="link-card" href="https://www.digikey.com/en/resources/conversion-calculators/conversion-calculator-resistor-color-code" target="_blank" rel="noopener"><span class="src">digikey.com</span><b>Resistor color code calculator</b><span>Pick the colors, get the value.</span></a>
+    </div>
+  </section>
+
+  <footer>Light Seeker · a first Arduino project for the Starter Kit. Your checklist progress is saved in this browser only.</footer>
+</div>
+
+<script>
+(function () {
+  /* ---------- breadboard holes ---------- */
+  var NS = "http://www.w3.org/2000/svg";
+  var X = function (c) { return 180 + (c - 1) * 18; };
+  var holes = document.getElementById("holes");
+  var rowL = document.getElementById("rowLabels");
+  var colL = document.getElementById("colLabels");
+  function hole(x, y) {
+    var r = document.createElementNS(NS, "rect");
+    r.setAttribute("x", x - 3); r.setAttribute("y", y - 3);
+    r.setAttribute("width", 6); r.setAttribute("height", 6);
+    r.setAttribute("rx", 1); r.setAttribute("fill", "#BDB8A6");
+    holes.appendChild(r);
+  }
+  function txt(parent, x, y, s) {
+    var t = document.createElementNS(NS, "text");
+    t.setAttribute("x", x); t.setAttribute("y", y); t.textContent = s;
+    parent.appendChild(t);
+  }
+  var rows = [["a", 120], ["b", 138], ["c", 156], ["d", 174], ["e", 192]];
+  for (var c = 1; c <= 30; c++) {
+    hole(X(c), 70); hole(X(c), 88);
+    rows.forEach(function (r) { hole(X(c), r[1]); });
+    if (c === 1 || c % 5 === 0 || [3, 8, 10, 13, 18, 26, 28].indexOf(c) > -1) txt(colL, X(c), 209, c);
+  }
+  rows.forEach(function (r) { txt(rowL, 162, r[1] + 3, r[0]); });
+
+  /* ---------- simulator ---------- */
+  var svg = document.getElementById("simSvg");
+  var head = document.getElementById("head");
+  var light = document.getElementById("light");
+  var beam = document.getElementById("beam");
+  var PX = 200, PY = 215;
+  var state = { angle: 120, lx: 110, ly: 75, auto: true, t: 0, dragging: false };
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce) state.auto = false;
+  var autoBtn = document.getElementById("autoBtn");
+  function setAuto(v) { state.auto = v; autoBtn.textContent = "Auto-move light: " + (v ? "on" : "off"); }
+  setAuto(state.auto);
+  autoBtn.addEventListener("click", function () { setAuto(!state.auto); });
+
+  function reading(eyeDeg) {
+    var dx = state.lx - PX, dy = PY - state.ly;
+    var phi = Math.atan2(dy, dx) * 180 / Math.PI;
+    var dist = Math.sqrt(dx * dx + dy * dy);
+    var d = (eyeDeg - phi) * Math.PI / 180;
+    var c = Math.max(0, Math.cos(d));
+    var near = Math.min(1, 140 / Math.max(dist, 60));
+    return Math.round(160 + 780 * Math.pow(c, 5) * near + (Math.random() * 8 - 4));
+  }
+  function toSvg(evt) {
+    var pt = svg.createSVGPoint(); pt.x = evt.clientX; pt.y = evt.clientY;
+    return pt.matrixTransform(svg.getScreenCTM().inverse());
+  }
+  function moveLight(p) {
+    state.lx = Math.max(15, Math.min(385, p.x));
+    state.ly = Math.max(20, Math.min(185, p.y));
+  }
+  svg.addEventListener("pointerdown", function (e) {
+    state.dragging = true; setAuto(false);
+    try { svg.setPointerCapture(e.pointerId); } catch (err) {}
+    moveLight(toSvg(e));
+  });
+  svg.addEventListener("pointermove", function (e) { if (state.dragging) moveLight(toSvg(e)); });
+  function endDrag() { state.dragging = false; }
+  svg.addEventListener("pointerup", endDrag);
+  svg.addEventListener("pointercancel", endDrag);
+
+  var el = {
+    rL: document.getElementById("rL"), rR: document.getElementById("rR"),
+    bL: document.getElementById("bL"), bR: document.getElementById("bR"),
+    brL: document.getElementById("brL"), brH: document.getElementById("brH"), brR: document.getElementById("brR"),
+    serial: document.getElementById("serial")
+  };
+  var DEADBAND = 25, STEP = 1, frame = 0;
+  function tick() {
+    if (state.auto) {
+      state.t += 0.012;
+      state.lx = 200 + Math.cos(state.t) * 150;
+      state.ly = 110 - Math.abs(Math.sin(state.t * 0.9)) * 60;
+    }
+    var left = reading(state.angle + 22);
+    var right = reading(state.angle - 22);
+    var diff = left - right;
+    var branch = "h";
+    if (diff > DEADBAND) { state.angle += STEP; branch = "l"; }
+    else if (diff < -DEADBAND) { state.angle -= STEP; branch = "r"; }
+    state.angle = Math.max(0, Math.min(180, state.angle));
+
+    head.setAttribute("transform", "rotate(" + (90 - state.angle) + " " + PX + " " + PY + ")");
+    light.setAttribute("transform", "translate(" + state.lx + " " + state.ly + ")");
+    beam.setAttribute("x2", state.lx); beam.setAttribute("y2", state.ly);
+
+    frame++;
+    if (frame % 3 === 0) {
+      el.rL.textContent = left; el.rR.textContent = right;
+      el.bL.style.width = (left / 1023 * 100) + "%";
+      el.bR.style.width = (right / 1023 * 100) + "%";
+      el.brL.classList.toggle("on", branch === "l");
+      el.brH.classList.toggle("on", branch === "h");
+      el.brR.classList.toggle("on", branch === "r");
+      el.serial.textContent = "L: " + String(left).padEnd(5) + "R: " + String(right).padEnd(5) + "angle: " + state.angle;
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  /* ---------- checklist ---------- */
+  var KEY = "light-seeker-steps";
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { saved = {}; }
+  var boxes = Array.prototype.slice.call(document.querySelectorAll("#steps input[type=checkbox]"));
+  function refresh() {
+    var n = 0;
+    boxes.forEach(function (b) { b.closest("li").classList.toggle("done", b.checked); if (b.checked) n++; });
+    document.getElementById("progTxt").textContent = n + " / " + boxes.length + " done";
+    document.getElementById("progBar").style.width = (n / boxes.length * 100) + "%";
+  }
+  boxes.forEach(function (b) {
+    b.checked = !!saved[b.id];
+    b.addEventListener("change", function () {
+      saved[b.id] = b.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
+      refresh();
+    });
+  });
+  refresh();
+
+  /* ---------- code: light highlighting + copy ---------- */
+  ["codeTest", "codeMain"].forEach(function (id) {
+    var node = document.getElementById(id);
+    var raw = node.textContent;
+    node.dataset.raw = raw;
+    var esc = raw.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    var out = esc.replace(/(\/\*[\s\S]*?\*\/|\/\/[^\n]*)|("[^"\n]*")|\b(void|int|const|if|else|#include)\b|\b(\d+)\b/g,
+      function (m, com, str, kw, num) {
+        if (com) return '<span class="c-com">' + com + "</span>";
+        if (str) return '<span class="c-num">' + str + "</span>";
+        if (kw) return '<span class="c-kw">' + kw + "</span>";
+        return '<span class="c-num">' + num + "</span>";
+      });
+    node.innerHTML = out;
+  });
+  document.querySelectorAll(".copy").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var node = document.getElementById(btn.dataset.target);
+      var text = node.dataset.raw;
+      function done(msg) { btn.textContent = msg; setTimeout(function () { btn.textContent = "Copy"; }, 1600); }
+      function fallback() {
+        var r = document.createRange(); r.selectNodeContents(node);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        done("Selected: press Ctrl+C");
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { done("Copied"); }, fallback);
+      } else { fallback(); }
+    });
+  });
+})();
+</script>
